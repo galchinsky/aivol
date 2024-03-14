@@ -22,12 +22,16 @@ def find_config_file(starting_directory):
             current_dir = parent_dir
     return None
 
-def resolve_path(path):
+def resolve(path):
     """Resolve the path using the root path, initializing it if necessary."""
     global ROOT_PATH
     if ROOT_PATH is None:
-        entry_point_path = os.path.abspath(sys.modules['__main__'].__file__)
-        config_file_path = find_config_file(os.path.dirname(entry_point_path))
+        if '__file__' in dir(sys.modules['__main__']):
+            entry_point_path = os.path.abspath(sys.modules['__main__'].__file__)
+            config_file_path = find_config_file(os.path.dirname(entry_point_path))
+        else:
+            # Handle the case when running from an interpreter or a situation where __main__.__file__ is not set
+            config_file_path = find_config_file(os.getcwd())
         if config_file_path:
             with open(config_file_path, 'r') as file:
                 try:
@@ -37,21 +41,8 @@ def resolve_path(path):
                     print(f"Error reading or parsing the configuration file: {e}", file=sys.stderr)
                     ROOT_PATH = None
         if ROOT_PATH is None:
-            raise RuntimeError("Root path has not been set. Configuration file not found or not parsed.")
+            ROOT_PATH = os.getenv('AIVOL_ROOT_PATH', "")
     if path.startswith("/"):
         return os.path.join(ROOT_PATH, path.lstrip('/'))
     else:
         return os.path.join(ROOT_PATH, path)
-
-def main():
-    # Example path resolution
-    example_paths = ["ai/datasets", "/ai/datasets", "datasets"]
-    try:
-        for path in example_paths:
-            resolved_path = resolve_path(path)
-            print(f"Original: {path}, Resolved: {resolved_path}")
-    except RuntimeError as e:
-        print(e)
-
-if __name__ == "__main__":
-    main()

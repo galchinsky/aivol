@@ -1,11 +1,17 @@
-from config import universal_load, flatten_dict
+from .config import universal_load, flatten_dict, folder_to_file, all_equal
+import csv
+import sys
 
 def compare_configs(config_files):
     configs = []
 
     for name in config_files:
+        name = folder_to_file(name)
         config = universal_load(name)
-        flattened_config = flatten_dict(config)
+        if config is None:
+            print(f"Config file {name} not found or not parsed.")
+            continue
+        flattened_config = flatten_dict(config, sep='--')
         configs.append(flattened_config)
 
     keys = set()

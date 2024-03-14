@@ -3,24 +3,11 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-name = "aivol"
-version = "0.0.1"
-author = "Dmitry Galchinsky"
-author_email = "galchinsky@borisfx.com"
-description = "Utilities for AI volumes"
-long_description = "file: README.md"
-long_description_content_type = "text/markdown"
-url = "https://github.com/galchinsky/aivol"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
-packages = setuptools.find_packages()
+packages = ["aivol"]
 
 [project]
 name = "aivol"
-version = "0.0.1"
+version = "0.0.3"
 authors = [{ name = "Dmitry Galchinsky", email = "galchinsky@borisfx.com" }]
 description = "Utilities for AI volumes"
 readme = "README.md"

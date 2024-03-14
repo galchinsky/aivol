@@ -1,4 +1,4 @@
-from .resolve import resolve_path
+from .resolve import resolve
 from .config import universal_load, universal_store
 
 import os
@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 def start_experiment(project_name, experiment_name, config, group="models"):
     # Resolve the path for the experiment
-    experiment_path = resolve_path(f'/ai/{group}/{project_name}/{experiment_name}')
+    experiment_path = resolve(f'{group}/{project_name}/{experiment_name}')
 
     # Ensure the directory exists
     if not os.path.exists(experiment_path):
@@ -31,7 +31,7 @@ def start_experiment(project_name, experiment_name, config, group="models"):
 
 def resume_experiment(project_name, experiment_name, config, group="models"):
     # Resolve the path for the experiment
-    experiment_path = resolve_path(f'/ai/{group}/{project_name}/{experiment_name}')
+    experiment_path = resolve(f'{group}/{project_name}/{experiment_name}')
 
     # Ensure the directory and config file exist
     config_file_path = os.path.join(experiment_path, 'config.yml')

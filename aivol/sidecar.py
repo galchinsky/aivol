@@ -1,8 +1,9 @@
 import glob
 import os
-from config import universal_load, universal_store
+from .config import universal_load, universal_store
 import sys
 import os
+from typing import Callable, Dict, Iterator
 
 # data format comparison for sidecar files:
 # json: the worst, because it's hard to append to it
@@ -33,14 +34,11 @@ class Handler:
         Returns:
         - list: A list of unique identifiers for the sidecar files found.
         """
-        # Define the pattern to search for sidecar files
-        pattern = f"{self.base_name}.*"
+        # Collect all files in the directory
+        all_files = os.listdir(self.directory)
 
-        # Collect all matching sidecar files
-        matching_files = glob.glob(os.path.join(self.directory, pattern))
-
-        # Filter out the original file if it's included in the matching files
-        matching_files = [file for file in matching_files if file != self.file_path]
+        # Filter files that match the base name pattern
+        matching_files = [file for file in all_files if file.startswith(self.base_name) and file != self.base_name]
 
         # Extract the unique identifiers from the file names
         unique_identifiers = set()
@@ -127,7 +125,7 @@ def load_to_pandas(directory: str, identifier: str):
 
     return df
 
-def update_and_store_sidecar_files(directory: str, identifier: str, function: Callable[[Dict], Dict], save_interval: int = 10) -> None:
+def update_and_store_sidecar_files(directory: str, identifier: str, function: Callable[[str, Dict], Iterator[Dict]], save_interval: int = 10) -> None:
     """
     Unlike process_sidecar_files, it expects the function to return the updated file and stores it itself
     Kind of wasteful (rewriting the whole file instead of appending), but it will work for most of cases
@@ -135,26 +133,28 @@ def update_and_store_sidecar_files(directory: str, identifier: str, function: Ca
     Parameters:
     - directory (str): The path to the directory where the non-sidecar and sidecar files are located.
     - identifier (str): A unique identifier used to distinguish between different sidecar files.
-    - function (callable): A function that takes a single argument (the current state of the sidecar file's data) and returns the updated state.
+    - function (callable): A function that takes (source file path, current state of the sidecar file's data) and returns the updated state.
     - save_interval (int): This parameter controls how often the updated sidecar file data is saved back to disk.
     """
     non_sidecar_files, sidecar_files = list_directory(directory)
 
-    for file in non_sidecar_files:
+    total_files = len(non_sidecar_files)
+    for index, file in enumerate(non_sidecar_files):
+        print(f"update_and_store_sidecar_files: [{index+1}/{total_files}] {file}")
         file_path = os.path.join(directory, file)
-        handler = Handler(file_path)
-        working_file = handler.get(identifier)
-        if working_file is None:
-            working_file = {}
+        handler = Handler(file_path, load=False)
+        initial_state = handler.get(identifier) or {}
+        sidecar_file_path = f"{file_path}---{identifier}"
+        updates_generator = function(file_path, initial_state)
+
         counter = 0
-        while True:
-            working_file = function(working_file)
+        for updated_state in updates_generator:
             counter += 1
             if counter % save_interval == 0:
-                universal_store(sidecar_file_path, working_file)
+                universal_store(sidecar_file_path, updated_state)
 
         if counter % save_interval != 0:
-            universal_store(sidecar_file_path, working_file)
+            universal_store(sidecar_file_path, updated_state)
 
 
 def process_sidecar_files(directory: str, identifier: str, function: Callable[[str, str], None]) -> None:
@@ -172,5 +172,6 @@ def process_sidecar_files(directory: str, identifier: str, function: Callable[[s
 
     for file in non_sidecar_files:
         file_path = os.path.join(directory, file)
-        sidecar_file_path = os.path.join(self.directory, f"{self.base_name}---{identifier}")
+        sidecar_file_path = os.path.join(self.directory, f"{file_path}---{identifier}")
         function(file_path, sidecar_file_path)
+
