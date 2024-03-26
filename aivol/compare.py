@@ -7,23 +7,24 @@ import csv
 
 def generate_ascii_table(data):
     # Extracting headers and ensuring consistent row ordering
-    headers = list(data.keys())
+    headers = ['keys'] + list(data.keys())
     rows = list(next(iter(data.values())).keys())
 
     # Calculating column widths
-    column_widths = [
-        max(len(header), max(len(str(data[header][row])) for row in rows))
-        for header in headers
-    ]
+    column_widths = [max(len(row) for row in rows)]
+    for header in headers[1:]:
+        column_width = max(len(header), max(len(str(data[header][row])) for row in rows))
+        column_widths.append(column_width)
 
     # Create the header row
-    header_row = " | ".join(header.ljust(column_widths[i]) for i, header in enumerate(headers))
+    header_row = " | ".join(headers[i].ljust(column_widths[i]) for i in range(len(headers)))
     separator = "-+-".join("-" * width for width in column_widths)
 
     # Create data rows
     data_rows = []
     for row in rows:
-        data_row = " | ".join(str(data[header][row]).ljust(column_widths[i]) for i, header in enumerate(headers))
+        row_data = [row] + [str(data[header][row]) if header in data and row in data[header] else '...' for header in headers[1:]]
+        data_row = " | ".join(row_data[i].ljust(column_widths[i]) for i in range(len(row_data)))
         data_rows.append(data_row)
 
     # Combine all parts

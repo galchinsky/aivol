@@ -7,7 +7,7 @@ packages = ["aivol"]
 
 [project]
 name = "aivol"
-version = "0.0.3"
+version = "0.0.5"
 authors = [{ name = "Dmitry Galchinsky", email = "galchinsky@borisfx.com" }]
 description = "Utilities for AI volumes"
 readme = "README.md"
