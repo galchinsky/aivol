@@ -79,20 +79,23 @@ class Handler:
             all_metadata[identifier] = metadata
 
 def list_directory(directory: str):
-    all_files = set(os.listdir(directory))
     non_sidecar_files = set()
     sidecar_files = {}
 
-    # Organize files into source and sidecar categories
-    for file in all_files:
-        if '---' in file:
-            base_file, _, _ = file.rpartition('---')
-            if base_file in all_files:
-                sidecar_files.setdefault(base_file, []).append(file)
+    # Walk through the directory structure recursively
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            relative_path = os.path.relpath(os.path.join(root, file), directory)
+            if '---' in file:
+                base_file, _, _ = file.rpartition('---')
+                # Check if the base file exists in the directory structure
+                base_file_path = os.path.join(root, base_file)
+                if os.path.exists(base_file_path):
+                    sidecar_files.setdefault(base_file, []).append(relative_path)
+                else:
+                    non_sidecar_files.add(relative_path)
             else:
-                non_sidecar_files.add(file)
-        else:
-            non_sidecar_files.add(file)
+                non_sidecar_files.add(relative_path)
     return non_sidecar_files, sidecar_files
 
 def load_to_pandas(directory: str, identifier: str):
@@ -106,9 +109,9 @@ def load_to_pandas(directory: str, identifier: str):
         sys.stderr.write(f"Error: The provided identifier '{identifier}' is not a directory.\n")
         return pd.DataFrame()  # Return an empty DataFrame if the identifier is not a directory
 
-    # Use load_directory to organize files and then process sidecar files
+    # Use list_directory to organize files and then process sidecar files
     all_metadata = []
-    non_sidecar_files, sidecar_files = load_directory(directory)
+    non_sidecar_files, sidecar_files = list_directory(directory)
 
     for base_file, sidecar_file_list in sidecar_files.items():
         sidecar_handler = Handler(directory, base_file, load=False)

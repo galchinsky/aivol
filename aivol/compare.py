@@ -72,6 +72,8 @@ def compare_configs(config_files, output_format=None, path_prefix=''):
             continue
         for config in configs:
             model_name = os.path.basename(os.path.dirname(config["_from_file"]))
+            if model_name == "":
+                model_name = config["_from_file"]
             if model_name not in table:
                 table[model_name] = {}
             table[model_name][k] = config.get(k, "...")
