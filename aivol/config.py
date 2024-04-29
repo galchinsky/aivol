@@ -57,7 +57,7 @@ def flatten_dict(d, parent_key='', sep=':'):
 
 def folder_to_file(fname):
     if os.path.isdir(fname):
-        files = glob.glob(fname + "/*.json") + glob.glob(fname + "/*.yml") + glob.glob(fname + "/*.pkl")
+        files = glob.glob(fname + "/*.json") + glob.glob(fname + "/*.yml") + glob.glob(fname + "/*.yaml") + glob.glob(fname + "/*.pkl")
         if files:
             fname = files[0]
     return fname
